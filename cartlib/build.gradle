@@ -5,13 +5,11 @@ apply plugin: 'com.jfrog.bintray'
 android {
     compileSdkVersion 25
     buildToolsVersion "27.0.3"
-
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
-
+        versionCode 2
+        versionName "1.0.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
@@ -20,6 +18,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    lintOptions {
+        abortOnError false
     }
 }
 
@@ -30,6 +31,51 @@ dependencies {
     })
     testImplementation 'junit:junit:4.12'
 }
+
+/**
+ * 加载Bintray属性文件
+ */
+Properties properties = new Properties()
+File localPropertiesFile = project.file("bintray.properties");
+if (localPropertiesFile.exists()) {
+    properties.load(localPropertiesFile.newDataInputStream())
+}
+/**
+ * 加载项目属性文件
+ */
+File projectPropertiesFile = project.file("project.properties");
+if (projectPropertiesFile.exists()) {
+    properties.load(projectPropertiesFile.newDataInputStream())
+}
+
+/**
+ * 读取项目属性
+ */
+def projectName = properties.getProperty("project.name")//项目名称
+def projectGroupId = properties.getProperty("project.groupId")//项目Id
+def projectArtifactId = properties.getProperty("project.artifactId")//一般与项目名称相同
+def projectVersionName = android.defaultConfig.versionName //项目版本号
+def projectPackaging = properties.getProperty("project.packaging") //项目打包类型
+def projectSiteUrl = properties.getProperty("project.siteUrl") //项目地址
+def projectGitUrl = properties.getProperty("project.gitUrl")  //项目git地址
+
+/**
+ * 读取bintray属性
+ */
+def bintrayUser = properties.getProperty("bintray.user")  //bintray用户名
+def bintrayApiKey = properties.getProperty("bintray.apiKey") //bintray Api Key
+def developerId = properties.getProperty("developer.id") //开发者Id
+def developerName = properties.getProperty("developer.name") //开发者名称
+def developerEmail = properties.getProperty("developer.email") //开发者email地址
+def javadocName = properties.getProperty("javadoc.name") //javadoc名字
+
+/**
+ * 这句代码一定要加否则会出现如下错误
+ * Could not upload to 'https://api.bintray.com/content/coolcode/maven/LibUiBase/1.0.0/CommonLibrary/LibUiBase/1.0.0/LibUiBase-1.0.0.pom': HTTP/1.1 400 Bad Request [
+ message:Unable to upload files: Maven group, artifact or version defined in the pom file do not match the file path 'CommonLibrary/LibUiBase/1.0.0/LibUiBase-1.0.0.p
+ om']
+ */
+group = projectGroupId
 
 /**
  * 清理打包
@@ -78,55 +124,44 @@ task makeJar(type: org.gradle.api.tasks.bundling.Jar) {
 }
 
 /**
- * 在终端执行生成JAR包 gradlew makeJar
+ * 生成sources.jar
+ */
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+/**
+ * 生成javadoc.jar
+ */
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+/**
+ * 在终端执行生成JAR包 gradlew makeJar makeJar之前先执行clearJar和build Task
  */
 makeJar.dependsOn(clearJar, build)
 
 /**
- * 加载bintray属性文件
+ * javadoc的配置
  */
-Properties properties = new Properties()
-File localPropertiesFile = project.file("bintray.properties");
-if (localPropertiesFile.exists()) {
-    properties.load(localPropertiesFile.newDataInputStream())
+javadoc {
+    options {
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        version projectVersionName
+        links "http://docs.oracle.com/javase/7/docs/api"
+        title javadocName
+    }
 }
-/**
- * 加载项目属性文件
- */
-File projectPropertiesFile = project.file("project.properties");
-if (projectPropertiesFile.exists()) {
-    properties.load(projectPropertiesFile.newDataInputStream())
-}
-
-/**
- * 读取项目属性
- */
-def projectRepositoryName = properties.getProperty("project.repositoryName") //仓库名称
-def projectName = properties.getProperty("project.name")//项目名称
-def projectGroupId = properties.getProperty("project.groupId")//项目Id
-def projectArtifactId = properties.getProperty("project.artifactId")//一般与项目名称相同
-def projectVersionName = android.defaultConfig.versionName //项目版本号
-def projectPackaging = properties.getProperty("project.packaging") //项目打包类型
-def projectSiteUrl = properties.getProperty("project.siteUrl") //项目地址
-def projectGitUrl = properties.getProperty("project.gitUrl")  //项目git地址
-
-/**
- * 读取bintray属性
- */
-def bintrayUser = properties.getProperty("bintray.user")  //bintray用户名
-def bintrayApiKey = properties.getProperty("bintray.apiKey") //bintray Api Key
-def developerId = properties.getProperty("developer.id") //开发者Id
-def developerName = properties.getProperty("developer.name") //开发者名称
-def developerEmail = properties.getProperty("developer.email") //开发者email地址
-def javadocName = properties.getProperty("javadoc.name") //javadoc名字
-
-/**
- * 这句代码一定要加否则会出现如下错误
- * Could not upload to 'https://api.bintray.com/content/coolcode/maven/LibUiBase/1.0.0/CommonLibrary/LibUiBase/1.0.0/LibUiBase-1.0.0.pom': HTTP/1.1 400 Bad Request [
- message:Unable to upload files: Maven group, artifact or version defined in the pom file do not match the file path 'CommonLibrary/LibUiBase/1.0.0/LibUiBase-1.0.0.p
- om']
- */
-group = projectGroupId
 
 /**
  * 配置生成POM.xml文件的参数
@@ -164,44 +199,9 @@ install {
     }
 }
 
-/**
- * 生成sources.jar
- */
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-/**
- * 生成javadoc.jar
- */
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
 artifacts {
     archives javadocJar
     archives sourcesJar
-}
-
-/**
- * javadoc的配置
- */
-javadoc {
-    options {
-        encoding "UTF-8"
-        charSet 'UTF-8'
-        author true
-        version projectVersionName
-        links "http://docs.oracle.com/javase/7/docs/api"
-        title javadocName
-    }
 }
 
 /**
@@ -217,7 +217,7 @@ bintray {
     configurations = ['archives']
     pkg {
         userOrg = bintrayUser //组织Id
-        repo = projectRepositoryName  //代码仓库Id
+        repo = 'maven'  //代码仓库Id
         name = projectName //项目名称
         websiteUrl = projectSiteUrl
         vcsUrl = projectGitUrl
@@ -226,6 +226,10 @@ bintray {
     }
 }
 
+/**
+ * bintrayUpload(上传到JFrog Bintray)之前先执行build和install(构建Pom文件)Task
+ */
+bintrayUpload.dependsOn(build, install)
 
 
 
