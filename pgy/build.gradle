@@ -1,0 +1,41 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'com.novoda.bintray-release'
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile 'org.jsoup:jsoup:1.11.3'
+    compile 'com.google.code.gson:gson:2.8.5'
+}
+
+repositories {
+    mavenCentral()
+}
+
+//基本信息
+group = 'cn.plugin.pgy'
+version = '1.0.0'
+
+//Bintray上传
+publish {
+    userOrg = 'xiaozhu'//bintray.com 注册的用户名
+    groupId = 'com.zy.plugin' //jcenter上的路径
+    artifactId = 'pgy'//项目名称
+    publishVersion = '1.0.0'//版本号
+    desc = 'pgy上传插件'//描述，不重要
+    //网站，不重要；尽量模拟github上的地址，例如我这样的；当然你有地址最好了
+    website = 'https://gitee.com/qingweiSun/gradle-plugin.git'
+    bintrayUser = 'xiaozhu'
+    bintrayKey = 'a1015537bc3d32d94dcdf455e60a0421edee43e2'
+    dryRun = false
+}
+
+//上传本地Maven
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('../repo'))
+        }
+    }
+}
