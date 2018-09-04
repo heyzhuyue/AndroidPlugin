@@ -20,7 +20,7 @@ version = '1.0.0'
 //Bintray上传
 publish {
     userOrg = 'xiaozhu'//bintray.com 注册的用户名
-    groupId = 'com.zy.plugin' //jcenter上的路径
+    groupId = 'com.zy.plugin' //JCenter上的路径
     artifactId = 'pgy'//项目名称
     publishVersion = '1.0.0'//版本号
     desc = 'pgyPlugin'//描述，不重要
@@ -35,6 +35,9 @@ publish {
 uploadArchives {
     repositories {
         mavenDeployer {
+            pom.groupId = 'com.zy.plugin'
+            pom.artifactId = 'pgy'
+            pom.version = '1.0.0'
             repository(url: uri('../repo'))
         }
     }
