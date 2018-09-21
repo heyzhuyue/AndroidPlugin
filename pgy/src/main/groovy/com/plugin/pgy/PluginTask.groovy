@@ -91,7 +91,7 @@ class PluginTask extends DefaultTask {
      */
     private static void printResultInfo(PgyResult upload) {
         System.out.println();
-        PgyResult.DataBean data = upload.getData();
+        PgyResult.DataBean data = upload.getData()
         System.out.println("应用类型：" + data.getBuildType())
         System.out.println("是否是最新版：" + data.getbuildIsLastest())
         System.out.println("App 文件大小：" + data.getbuildFileSize())
